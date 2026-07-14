@@ -3,105 +3,96 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 
 class Report extends CI_Controller {
 
-    public function __construct() {
+    public function __construct()
+    {
         parent::__construct();
-        $this->check_login();
-        $this->load->model('Item_model');
+        $this->load->model('Report_model');
         $this->load->model('Production_model');
-        $this->load->model('Cutting_production_model');
-        $this->load->model('Production_waste_model');
-        $this->load->model('Delivery_letter_model');
+        $this->load->model('Cutting_model');
+        $this->load->model('Delivery_model');
+        $this->load->helper('url');
+        $this->check_login();
     }
 
-    public function stock_recap() {
-        $this->check_access(array(ROLE_ADMIN, ROLE_OPERATOR_ASSEMBLY));
-        
-        $data['page_title'] = 'Rekap Stok Barang';
-        $date = $this->input->get('date');
-        if (!$date) {
-            $date = date('Y-m-d');
-        }
-        $data['selected_date'] = $date;
-        
-        $this->load->view('layouts/header', $data);
-        $this->load->view('report/stock_recap', $data);
-        $this->load->view('layouts/footer');
-    }
-
-    public function production_recap() {
-        $this->check_access(array(ROLE_ADMIN, ROLE_OPERATOR_ASSEMBLY));
-        
-        $data['page_title'] = 'Rekap Produksi Barang';
-        $date = $this->input->get('date');
-        if (!$date) {
-            $date = date('Y-m-d');
-        }
-        $data['selected_date'] = $date;
-        $data['productions'] = $this->Production_model->get_by_date($date);
-        
-        $this->load->view('layouts/header', $data);
-        $this->load->view('report/production_recap', $data);
-        $this->load->view('layouts/footer');
-    }
-
-    public function cutting_recap() {
-        $this->check_access(array(ROLE_ADMIN, ROLE_OPERATOR_CUTTING));
-        
-        $data['page_title'] = 'Rekap Produksi Cutting';
-        $date = $this->input->get('date');
-        if (!$date) {
-            $date = date('Y-m-d');
-        }
-        $data['selected_date'] = $date;
-        $data['cuttings'] = $this->Cutting_production_model->get_by_date($date);
-        
-        $this->load->view('layouts/header', $data);
-        $this->load->view('report/cutting_recap', $data);
-        $this->load->view('layouts/footer');
-    }
-
-    public function waste_recap() {
-        $this->check_access(array(ROLE_ADMIN, ROLE_OPERATOR_ASSEMBLY, ROLE_OPERATOR_CUTTING));
-        
-        $data['page_title'] = 'Rekap Sampah Produksi';
-        $date = $this->input->get('date');
-        if (!$date) {
-            $date = date('Y-m-d');
-        }
-        $data['selected_date'] = $date;
-        $data['wastes'] = $this->Production_waste_model->get_by_date($date);
-        
-        $this->load->view('layouts/header', $data);
-        $this->load->view('report/waste_recap', $data);
-        $this->load->view('layouts/footer');
-    }
-
-    public function delivery_recap() {
-        $this->check_access(array(ROLE_ADMIN, ROLE_DRIVER));
-        
-        $data['page_title'] = 'Rekap Surat Jalan';
-        $date = $this->input->get('date');
-        if (!$date) {
-            $date = date('Y-m-d');
-        }
-        $data['selected_date'] = $date;
-        $data['deliveries'] = $this->Delivery_letter_model->get_by_date($date);
-        
-        $this->load->view('layouts/header', $data);
-        $this->load->view('report/delivery_recap', $data);
-        $this->load->view('layouts/footer');
-    }
-
-    private function check_login() {
+    private function check_login()
+    {
         if (!$this->session->userdata('user_id')) {
-            redirect('auth');
+            redirect('auth/login');
         }
     }
 
-    private function check_access($allowed_roles) {
-        $user_level = $this->session->userdata('level');
-        if (!in_array($user_level, $allowed_roles)) {
-            show_error('Anda tidak memiliki akses ke halaman ini', 403);
-        }
+    public function index()
+    {
+        $data['title'] = 'Laporan';
+        $this->load->view('layouts/header', $data);
+        $this->load->view('report/index', $data);
+        $this->load->view('layouts/footer');
     }
+
+    public function stock()
+    {
+        $data['title'] = 'Laporan Stok Barang';
+        $data['report_data'] = $this->Report_model->get_stock_report();
+        
+        $this->load->view('layouts/header', $data);
+        $this->load->view('report/stock', $data);
+        $this->load->view('layouts/footer');
+    }
+
+    public function production()
+    {
+        $data['title'] = 'Laporan Produksi';
+        $start_date = $this->input->get('start_date') ? $this->input->get('start_date') : date('Y-m-01');
+        $end_date = $this->input->get('end_date') ? $this->input->get('end_date') : date('Y-m-d');
+        
+        $data['report_data'] = $this->Production_model->get_report($start_date, $end_date);
+        $data['start_date'] = $start_date;
+        $data['end_date'] = $end_date;
+        
+        $this->load->view('layouts/header', $data);
+        $this->load->view('report/production', $data);
+        $this->load->view('layouts/footer');
+    }
+
+    public function cutting()
+    {
+        $data['title'] = 'Laporan Pemotongan';
+        $start_date = $this->input->get('start_date') ? $this->input->get('start_date') : date('Y-m-01');
+        $end_date = $this->input->get('end_date') ? $this->input->get('end_date') : date('Y-m-d');
+        
+        $data['report_data'] = $this->Cutting_model->get_report($start_date, $end_date);
+        $data['start_date'] = $start_date;
+        $data['end_date'] = $end_date;
+        
+        $this->load->view('layouts/header', $data);
+        $this->load->view('report/cutting', $data);
+        $this->load->view('layouts/footer');
+    }
+
+    public function delivery()
+    {
+        $data['title'] = 'Laporan Pengiriman';
+        $start_date = $this->input->get('start_date') ? $this->input->get('start_date') : date('Y-m-01');
+        $end_date = $this->input->get('end_date') ? $this->input->get('end_date') : date('Y-m-d');
+        
+        $data['report_data'] = $this->Delivery_model->get_report($start_date, $end_date);
+        $data['start_date'] = $start_date;
+        $data['end_date'] = $end_date;
+        
+        $this->load->view('layouts/header', $data);
+        $this->load->view('report/delivery', $data);
+        $this->load->view('layouts/footer');
+    }
+
+    public function waste()
+    {
+        $data['title'] = 'Laporan Limbah/Waste';
+        $data['report_data'] = $this->Report_model->get_waste_report();
+        
+        $this->load->view('layouts/header', $data);
+        $this->load->view('report/waste', $data);
+        $this->load->view('layouts/footer');
+    }
+
 }
+?>
