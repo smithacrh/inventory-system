@@ -1,85 +1,95 @@
 <?php
+defined('BASEPATH') OR exit('No direct script access allowed');
+
 class Production_model extends CI_Model {
 
-    public function __construct() {
+    public function __construct()
+    {
         parent::__construct();
+        $this->load->database();
     }
 
-    public function get_all() {
-        $this->db->select('production.id, production.item_id, production.quantity_produced, production.waste_quantity, production.created_by, production.created_at, items.name as item_name, users.username');
-        $this->db->from('production');
-        $this->db->join('items', 'production.item_id = items.id');
-        $this->db->join('users', 'production.created_by = users.id');
-        $this->db->order_by('production.created_at', 'DESC');
+    public function get_all()
+    {
+        $this->db->select('p.*, i.item_name, c.category_name, u.name as created_by_name');
+        $this->db->from('productions p');
+        $this->db->join('items i', 'p.item_id = i.id', 'left');
+        $this->db->join('categories c', 'i.category_id = c.id', 'left');
+        $this->db->join('users u', 'p.created_by = u.id', 'left');
+        $this->db->order_by('p.production_date', 'DESC');
         return $this->db->get()->result();
     }
 
-    public function get_by_id($id) {
-        $this->db->select('production.id, production.item_id, production.quantity_produced, production.waste_quantity, production.created_by, production.created_at, items.name as item_name, item_categories.name as category_name');
-        $this->db->from('production');
-        $this->db->join('items', 'production.item_id = items.id');
-        $this->db->join('item_categories', 'items.category_id = item_categories.id');
-        $this->db->where('production.id', $id);
+    public function get_by_id($id)
+    {
+        $this->db->select('p.*, i.item_name, c.category_name, u.name as created_by_name');
+        $this->db->from('productions p');
+        $this->db->join('items i', 'p.item_id = i.id', 'left');
+        $this->db->join('categories c', 'i.category_id = c.id', 'left');
+        $this->db->join('users u', 'p.created_by = u.id', 'left');
+        $this->db->where('p.id', $id);
         return $this->db->get()->row();
     }
 
-    public function get_by_date($date) {
-        $this->db->select('production.id, production.item_id, production.quantity_produced, production.waste_quantity, items.name as item_name');
-        $this->db->from('production');
-        $this->db->join('items', 'production.item_id = items.id');
-        $this->db->where('DATE(production.created_at)', $date);
-        $this->db->order_by('production.created_at', 'DESC');
-        return $this->db->get()->result();
+    public function insert($data)
+    {
+        return $this->db->insert('productions', $data);
     }
 
-    public function get_datatable() {
-        $this->db->select('production.id, production.item_id, production.quantity_produced, production.waste_quantity, production.created_by, production.created_at, items.name as item_name, item_categories.name as category_name, users.username');
-        $this->db->from('production');
-        $this->db->join('items', 'production.item_id = items.id');
-        $this->db->join('item_categories', 'items.category_id = item_categories.id');
-        $this->db->join('users', 'production.created_by = users.id');
-        
-        // Search
-        if (!empty($this->input->post('search[value]'))) {
-            $search = $this->input->post('search[value]');
-            $this->db->like('items.name', $search);
-        }
-        
-        // Limit
-        $length = $this->input->post('length');
-        $start = $this->input->post('start');
-        if ($length != -1) {
-            $this->db->limit($length, $start);
-        }
-        
-        $this->db->order_by('production.created_at', 'DESC');
-        return $this->db->get()->result();
-    }
-
-    public function get_datatable_count() {
-        return $this->db->count_all('production');
-    }
-
-    public function get_datatable_filter_count() {
-        $this->db->from('production');
-        $this->db->join('items', 'production.item_id = items.id');
-        if (!empty($this->input->post('search[value]'))) {
-            $search = $this->input->post('search[value]');
-            $this->db->like('items.name', $search);
-        }
-        return $this->db->count_all_results();
-    }
-
-    public function create($data) {
-        return $this->db->insert('production', $data);
-    }
-
-    public function update($id, $data) {
+    public function update($id, $data)
+    {
         $this->db->where('id', $id);
-        return $this->db->update('production', $data);
+        return $this->db->update('productions', $data);
     }
 
-    public function delete($id) {
-        return $this->db->delete('production', array('id' => $id));
+    public function delete($id)
+    {
+        return $this->db->delete('productions', array('id' => $id));
     }
+
+    public function count_all()
+    {
+        return $this->db->count_all('productions');
+    }
+
+    public function get_recent($limit = 5)
+    {
+        $this->db->select('p.*, i.item_name, c.category_name, u.name as created_by_name');
+        $this->db->from('productions p');
+        $this->db->join('items i', 'p.item_id = i.id', 'left');
+        $this->db->join('categories c', 'i.category_id = c.id', 'left');
+        $this->db->join('users u', 'p.created_by = u.id', 'left');
+        $this->db->order_by('p.production_date', 'DESC');
+        $this->db->limit($limit);
+        return $this->db->get()->result();
+    }
+
+    public function get_report($start_date, $end_date)
+    {
+        $this->db->select('p.*, i.item_name, c.category_name, u.name as created_by_name');
+        $this->db->from('productions p');
+        $this->db->join('items i', 'p.item_id = i.id', 'left');
+        $this->db->join('categories c', 'i.category_id = c.id', 'left');
+        $this->db->join('users u', 'p.created_by = u.id', 'left');
+        $this->db->where('DATE(p.production_date) >=', $start_date);
+        $this->db->where('DATE(p.production_date) <=', $end_date);
+        $this->db->order_by('p.production_date', 'DESC');
+        return $this->db->get()->result();
+    }
+
+    public function get_statistics()
+    {
+        return $this->db->query("
+            SELECT 
+                DATE(production_date) as date,
+                COUNT(id) as total_production,
+                SUM(quantity) as total_quantity
+            FROM productions
+            WHERE production_date >= DATE_SUB(NOW(), INTERVAL 30 DAY)
+            GROUP BY DATE(production_date)
+            ORDER BY date DESC
+        ")->result();
+    }
+
 }
+?>
