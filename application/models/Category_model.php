@@ -11,12 +11,15 @@ class Category_model extends CI_Model {
 
     public function get_all()
     {
-        return $this->db->get('categories')->result();
+        $query = $this->db->get('categories');
+        return $query->result();
     }
 
     public function get_by_id($id)
     {
-        return $this->db->get_where('categories', array('id' => $id))->row();
+        $this->db->where('id', $id);
+        $query = $this->db->get('categories');
+        return $query->row();
     }
 
     public function insert($data)
@@ -32,13 +35,13 @@ class Category_model extends CI_Model {
 
     public function delete($id)
     {
-        return $this->db->delete('categories', array('id' => $id));
+        $this->db->where('id', $id);
+        return $this->db->delete('categories');
     }
 
     public function count_all()
     {
         return $this->db->count_all('categories');
     }
-
 }
 ?>

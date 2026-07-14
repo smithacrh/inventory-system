@@ -11,24 +11,54 @@ class Delivery_model extends CI_Model {
 
     public function get_all()
     {
-        $this->db->select('d.*, co.name as consumer_name, co.phone, co.address, i.item_name, u.name as created_by_name');
-        $this->db->from('deliveries d');
-        $this->db->join('consumers co', 'd.consumer_id = co.id', 'left');
-        $this->db->join('items i', 'd.item_id = i.id', 'left');
-        $this->db->join('users u', 'd.created_by = u.id', 'left');
-        $this->db->order_by('d.delivery_date', 'DESC');
-        return $this->db->get()->result();
+        $query = $this->db->get('deliveries');
+        return $query->result();
+    }
+
+    public function get_all_with_consumer()
+    {
+        $this->db->select('deliveries.*, consumers.nama_konsumen, consumers.alamat, items.nama_barang, items.sku, users.nama_lengkap');
+        $this->db->join('consumers', 'consumers.id = deliveries.konsumen_id', 'left');
+        $this->db->join('items', 'items.id = deliveries.item_id', 'left');
+        $this->db->join('users', 'users.id = deliveries.created_by', 'left');
+        $this->db->order_by('deliveries.created_at', 'DESC');
+        $query = $this->db->get('deliveries');
+        return $query->result();
     }
 
     public function get_by_id($id)
     {
-        $this->db->select('d.*, co.name as consumer_name, co.phone, co.address, i.item_name, i.unit, u.name as created_by_name');
-        $this->db->from('deliveries d');
-        $this->db->join('consumers co', 'd.consumer_id = co.id', 'left');
-        $this->db->join('items i', 'd.item_id = i.id', 'left');
-        $this->db->join('users u', 'd.created_by = u.id', 'left');
-        $this->db->where('d.id', $id);
-        return $this->db->get()->row();
+        $this->db->select('deliveries.*, consumers.nama_konsumen, consumers.alamat, items.nama_barang, items.sku, users.nama_lengkap');
+        $this->db->join('consumers', 'consumers.id = deliveries.konsumen_id', 'left');
+        $this->db->join('items', 'items.id = deliveries.item_id', 'left');
+        $this->db->join('users', 'users.id = deliveries.created_by', 'left');
+        $this->db->where('deliveries.id', $id);
+        $query = $this->db->get('deliveries');
+        return $query->row();
+    }
+
+    public function get_recent($limit = 5)
+    {
+        $this->db->select('deliveries.*, consumers.nama_konsumen, items.nama_barang');
+        $this->db->join('consumers', 'consumers.id = deliveries.konsumen_id', 'left');
+        $this->db->join('items', 'items.id = deliveries.item_id', 'left');
+        $this->db->order_by('deliveries.created_at', 'DESC');
+        $this->db->limit($limit);
+        $query = $this->db->get('deliveries');
+        return $query->result();
+    }
+
+    public function get_by_date_range($start_date, $end_date)
+    {
+        $this->db->select('deliveries.*, consumers.nama_konsumen, consumers.alamat, items.nama_barang, items.sku, items.satuan, users.nama_lengkap');
+        $this->db->join('consumers', 'consumers.id = deliveries.konsumen_id', 'left');
+        $this->db->join('items', 'items.id = deliveries.item_id', 'left');
+        $this->db->join('users', 'users.id = deliveries.created_by', 'left');
+        $this->db->where('DATE(deliveries.tanggal_pengiriman) >=', $start_date);
+        $this->db->where('DATE(deliveries.tanggal_pengiriman) <=', $end_date);
+        $this->db->order_by('deliveries.tanggal_pengiriman', 'DESC');
+        $query = $this->db->get('deliveries');
+        return $query->result();
     }
 
     public function insert($data)
@@ -44,52 +74,13 @@ class Delivery_model extends CI_Model {
 
     public function delete($id)
     {
-        return $this->db->delete('deliveries', array('id' => $id));
+        $this->db->where('id', $id);
+        return $this->db->delete('deliveries');
     }
 
     public function count_all()
     {
         return $this->db->count_all('deliveries');
     }
-
-    public function get_recent($limit = 5)
-    {
-        $this->db->select('d.*, co.name as consumer_name, co.phone, i.item_name, u.name as created_by_name');
-        $this->db->from('deliveries d');
-        $this->db->join('consumers co', 'd.consumer_id = co.id', 'left');
-        $this->db->join('items i', 'd.item_id = i.id', 'left');
-        $this->db->join('users u', 'd.created_by = u.id', 'left');
-        $this->db->order_by('d.delivery_date', 'DESC');
-        $this->db->limit($limit);
-        return $this->db->get()->result();
-    }
-
-    public function get_report($start_date, $end_date)
-    {
-        $this->db->select('d.*, co.name as consumer_name, co.phone, i.item_name, u.name as created_by_name');
-        $this->db->from('deliveries d');
-        $this->db->join('consumers co', 'd.consumer_id = co.id', 'left');
-        $this->db->join('items i', 'd.item_id = i.id', 'left');
-        $this->db->join('users u', 'd.created_by = u.id', 'left');
-        $this->db->where('DATE(d.delivery_date) >=', $start_date);
-        $this->db->where('DATE(d.delivery_date) <=', $end_date);
-        $this->db->order_by('d.delivery_date', 'DESC');
-        return $this->db->get()->result();
-    }
-
-    public function get_statistics()
-    {
-        return $this->db->query("
-            SELECT 
-                DATE(delivery_date) as date,
-                COUNT(id) as total_delivery,
-                SUM(quantity) as total_quantity
-            FROM deliveries
-            WHERE delivery_date >= DATE_SUB(NOW(), INTERVAL 30 DAY)
-            GROUP BY DATE(delivery_date)
-            ORDER BY date DESC
-        ")->result();
-    }
-
 }
 ?>

@@ -11,25 +11,25 @@ class User_model extends CI_Model {
 
     public function get_all()
     {
-        return $this->db->get('users')->result();
+        $query = $this->db->get('users');
+        return $query->result();
     }
 
     public function get_by_id($id)
     {
-        return $this->db->get_where('users', array('id' => $id))->row();
+        $this->db->where('id', $id);
+        $query = $this->db->get('users');
+        return $query->row();
     }
 
-    public function get_user_by_username($username)
+    public function get_by_username($username)
     {
-        return $this->db->get_where('users', array('username' => $username))->row();
+        $this->db->where('username', $username);
+        $query = $this->db->get('users');
+        return $query->row();
     }
 
     public function insert($data)
-    {
-        return $this->db->insert('users', $data);
-    }
-
-    public function insert_user($data)
     {
         return $this->db->insert('users', $data);
     }
@@ -42,13 +42,13 @@ class User_model extends CI_Model {
 
     public function delete($id)
     {
-        return $this->db->delete('users', array('id' => $id));
+        $this->db->where('id', $id);
+        return $this->db->delete('users');
     }
 
     public function count_all()
     {
         return $this->db->count_all('users');
     }
-
 }
 ?>

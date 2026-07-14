@@ -11,19 +11,41 @@ class Item_model extends CI_Model {
 
     public function get_all()
     {
-        $this->db->select('i.*, c.category_name');
-        $this->db->from('items i');
-        $this->db->join('categories c', 'i.category_id = c.id', 'left');
-        return $this->db->get()->result();
+        $query = $this->db->get('items');
+        return $query->result();
+    }
+
+    public function get_all_with_category()
+    {
+        $this->db->select('items.*, categories.nama_kategori');
+        $this->db->join('categories', 'categories.id = items.kategori_id', 'left');
+        $query = $this->db->get('items');
+        return $query->result();
+    }
+
+    public function get_all_with_value()
+    {
+        $this->db->select('items.*, categories.nama_kategori, (items.stok * items.harga_satuan) as total_value');
+        $this->db->join('categories', 'categories.id = items.kategori_id', 'left');
+        $query = $this->db->get('items');
+        return $query->result();
     }
 
     public function get_by_id($id)
     {
-        $this->db->select('i.*, c.category_name');
-        $this->db->from('items i');
-        $this->db->join('categories c', 'i.category_id = c.id', 'left');
-        $this->db->where('i.id', $id);
-        return $this->db->get()->row();
+        $this->db->where('id', $id);
+        $query = $this->db->get('items');
+        return $query->row();
+    }
+
+    public function get_low_stock($limit = 10)
+    {
+        $this->db->select('items.*, categories.nama_kategori');
+        $this->db->join('categories', 'categories.id = items.kategori_id', 'left');
+        $this->db->where('items.stok <=', $this->db->query('SELECT minimum_stok FROM items'));
+        $this->db->limit($limit);
+        $query = $this->db->get('items');
+        return $query->result();
     }
 
     public function insert($data)
@@ -39,34 +61,32 @@ class Item_model extends CI_Model {
 
     public function delete($id)
     {
-        return $this->db->delete('items', array('id' => $id));
+        $this->db->where('id', $id);
+        return $this->db->delete('items');
+    }
+
+    public function update_stock($id, $amount, $operation = 'add')
+    {
+        $item = $this->get_by_id($id);
+        if (!$item) return false;
+
+        $new_stock = $operation === 'add' ? $item->stok + $amount : $item->stok - $amount;
+        $new_stock = max(0, $new_stock); // Prevent negative stock
+
+        return $this->update($id, ['stok' => $new_stock, 'updated_at' => date('Y-m-d H:i:s')]);
+    }
+
+    public function get_total_stock_value()
+    {
+        $this->db->select_sum('(stok * harga_satuan)', 'total_value');
+        $query = $this->db->get('items');
+        $result = $query->row();
+        return $result->total_value ?? 0;
     }
 
     public function count_all()
     {
         return $this->db->count_all('items');
     }
-
-    public function get_stock_summary()
-    {
-        $this->db->select('i.*, c.category_name');
-        $this->db->from('items i');
-        $this->db->join('categories c', 'i.category_id = c.id', 'left');
-        $this->db->order_by('i.stock', 'ASC');
-        $this->db->limit(10);
-        return $this->db->get()->result();
-    }
-
-    public function get_low_stock($limit = 5)
-    {
-        $this->db->select('i.*, c.category_name');
-        $this->db->from('items i');
-        $this->db->join('categories c', 'i.category_id = c.id', 'left');
-        $this->db->where('i.stock <', 10);
-        $this->db->order_by('i.stock', 'ASC');
-        $this->db->limit($limit);
-        return $this->db->get()->result();
-    }
-
 }
 ?>

@@ -11,12 +11,24 @@ class Consumer_model extends CI_Model {
 
     public function get_all()
     {
-        return $this->db->get('consumers')->result();
+        $query = $this->db->get('consumers');
+        return $query->result();
     }
 
     public function get_by_id($id)
     {
-        return $this->db->get_where('consumers', array('id' => $id))->row();
+        $this->db->where('id', $id);
+        $query = $this->db->get('consumers');
+        return $query->row();
+    }
+
+    public function search($search)
+    {
+        $this->db->like('nama_konsumen', $search);
+        $this->db->or_like('alamat', $search);
+        $this->db->or_like('telepon', $search);
+        $query = $this->db->get('consumers');
+        return $query->result();
     }
 
     public function insert($data)
@@ -32,21 +44,13 @@ class Consumer_model extends CI_Model {
 
     public function delete($id)
     {
-        return $this->db->delete('consumers', array('id' => $id));
+        $this->db->where('id', $id);
+        return $this->db->delete('consumers');
     }
 
     public function count_all()
     {
         return $this->db->count_all('consumers');
     }
-
-    public function search($keyword)
-    {
-        $this->db->like('name', $keyword);
-        $this->db->or_like('phone', $keyword);
-        $this->db->or_like('email', $keyword);
-        return $this->db->get('consumers')->result();
-    }
-
 }
 ?>
