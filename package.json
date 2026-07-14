@@ -1,0 +1,23 @@
+{
+  "name": "inventory-system",
+  "version": "1.0.0",
+  "description": "KJU Inventory Management System",
+  "main": "index.js",
+  "scripts": {
+    "dev": "tailwindcss -i ./assets/css/input.css -o ./assets/css/output.css --watch",
+    "build": "tailwindcss -i ./assets/css/input.css -o ./assets/css/output.css --minify"
+  },
+  "keywords": [
+    "inventory",
+    "management",
+    "system",
+    "kju"
+  ],
+  "author": "Smitharch",
+  "license": "MIT",
+  "devDependencies": {
+    "tailwindcss": "^3.3.0",
+    "autoprefixer": "^10.4.14",
+    "postcss": "^8.4.24"
+  }
+}
