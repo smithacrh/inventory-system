@@ -1,101 +1,118 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="id" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo $title ?? 'Inventory System'; ?></title>
+    <title><?php echo isset($page_title) ? $page_title . ' - Inventory System' : 'Inventory System'; ?></title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="<?php echo base_url('assets/css/style.css'); ?>">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        // Dark mode toggle
+        function initTheme() {
+            if (localStorage.getItem('theme') === 'dark' || (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+                localStorage.setItem('theme', 'dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+                localStorage.setItem('theme', 'light');
+            }
+        }
+        initTheme();
+    </script>
     <style>
-        :root {
-            color-scheme: light;
-        }
-        html.dark {
-            color-scheme: dark;
-        }
+        [data-theme="dark"] { color-scheme: dark; }
     </style>
 </head>
-<body class="bg-white dark:bg-gray-900 text-gray-900 dark:text-white transition-colors duration-300">
-    <!-- Navbar -->
-    <nav class="bg-blue-600 dark:bg-blue-800 shadow-lg">
-        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
-            <div class="flex items-center space-x-2">
-                <h1 class="text-white font-bold text-2xl">📦 Inventory System</h1>
-            </div>
-            <div class="flex items-center space-x-6">
-                <?php if ($this->session->userdata('user_id')): ?>
-                    <span class="text-white text-sm">
-                        Welcome, <strong><?php echo $this->session->userdata('user_name'); ?></strong>
-                    </span>
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+    <!-- Navigation -->
+    <nav class="bg-white dark:bg-gray-800 shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <!-- Logo -->
+                <div class="flex items-center space-x-2">
+                    <i class="fas fa-boxes text-blue-600 dark:text-blue-400 text-2xl"></i>
+                    <span class="font-bold text-xl text-gray-900 dark:text-white">Inventory System</span>
+                </div>
+
+                <!-- Menu Items -->
+                <div class="hidden md:flex space-x-1">
+                    <?php if($this->session->userdata('is_logged_in')): ?>
+                        <a href="<?php echo base_url('dashboard'); ?>" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-100 dark:hover:bg-gray-700">
+                            <i class="fas fa-chart-line"></i> Dashboard
+                        </a>
+                        <?php if($this->session->userdata('role') == 1 || $this->session->userdata('role') == 2): ?>
+                            <a href="<?php echo base_url('consumer'); ?>" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-100 dark:hover:bg-gray-700">
+                                <i class="fas fa-users"></i> Konsumen
+                            </a>
+                            <a href="<?php echo base_url('item'); ?>" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-100 dark:hover:bg-gray-700">
+                                <i class="fas fa-box"></i> Barang
+                            </a>
+                        <?php endif; ?>
+                        <?php if($this->session->userdata('role') == 1 || $this->session->userdata('role') == 2): ?>
+                            <a href="<?php echo base_url('production'); ?>" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-100 dark:hover:bg-gray-700">
+                                <i class="fas fa-industry"></i> Produksi
+                            </a>
+                        <?php endif; ?>
+                        <?php if($this->session->userdata('role') == 1 || $this->session->userdata('role') == 3): ?>
+                            <a href="<?php echo base_url('cutting'); ?>" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-100 dark:hover:bg-gray-700">
+                                <i class="fas fa-cut"></i> Pemotongan
+                            </a>
+                        <?php endif; ?>
+                        <?php if($this->session->userdata('role') == 1 || $this->session->userdata('role') == 4): ?>
+                            <a href="<?php echo base_url('delivery'); ?>" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-100 dark:hover:bg-gray-700">
+                                <i class="fas fa-truck"></i> Pengiriman
+                            </a>
+                        <?php endif; ?>
+                        <a href="<?php echo base_url('report'); ?>" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-100 dark:hover:bg-gray-700">
+                            <i class="fas fa-file-alt"></i> Laporan
+                        </a>
+                        <?php if($this->session->userdata('role') == 1): ?>
+                            <a href="<?php echo base_url('user'); ?>" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-100 dark:hover:bg-gray-700">
+                                <i class="fas fa-users-cog"></i> User
+                            </a>
+                        <?php endif; ?>
+                    <?php endif; ?>
+                </div>
+
+                <!-- Right Menu -->
+                <div class="flex items-center space-x-4">
                     <!-- Theme Toggle -->
-                    <button onclick="toggleTheme()" class="bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2 rounded text-sm font-medium">
-                        🌙 Dark
+                    <button id="themeToggle" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700" title="Toggle dark mode">
+                        <i class="fas fa-moon text-yellow-500 dark:hidden"></i>
+                        <i class="fas fa-sun text-yellow-300 hidden dark:block"></i>
                     </button>
-                    <a href="<?php echo base_url('auth/logout'); ?>" class="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded text-sm font-medium">
-                        Logout
-                    </a>
-                <?php endif; ?>
+
+                    <?php if($this->session->userdata('is_logged_in')): ?>
+                        <!-- User Menu -->
+                        <div class="flex items-center space-x-2">
+                            <span class="text-sm font-medium"><?php echo $this->session->userdata('nama_lengkap'); ?></span>
+                            <a href="<?php echo base_url('auth/logout'); ?>" class="px-3 py-2 bg-red-600 text-white rounded-md text-sm font-medium hover:bg-red-700">
+                                <i class="fas fa-sign-out-alt"></i> Logout
+                            </a>
+                        </div>
+                    <?php else: ?>
+                        <a href="<?php echo base_url('auth/login'); ?>" class="px-3 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700">
+                            Login
+                        </a>
+                    <?php endif; ?>
+                </div>
             </div>
         </div>
     </nav>
 
-    <!-- Sidebar -->
-    <div class="flex">
-        <?php if ($this->session->userdata('user_id')): ?>
-        <div class="w-64 bg-gray-100 dark:bg-gray-800 min-h-screen border-r border-gray-300 dark:border-gray-700">
-            <div class="p-4">
-                <h2 class="text-lg font-bold mb-6">Menu</h2>
-                <nav class="space-y-2">
-                    <a href="<?php echo base_url('dashboard'); ?>" class="block px-4 py-2 rounded hover:bg-gray-200 dark:hover:bg-gray-700">📊 Dashboard</a>
-                    
-                    <?php if ($this->session->userdata('user_level') <= 2): ?>
-                        <a href="<?php echo base_url('consumer'); ?>" class="block px-4 py-2 rounded hover:bg-gray-200 dark:hover:bg-gray-700">👥 Konsumen</a>
-                        <a href="<?php echo base_url('category'); ?>" class="block px-4 py-2 rounded hover:bg-gray-200 dark:hover:bg-gray-700">📂 Kategori Barang</a>
-                        <a href="<?php echo base_url('item'); ?>" class="block px-4 py-2 rounded hover:bg-gray-200 dark:hover:bg-gray-700">📦 Stok Barang</a>
-                    <?php endif; ?>
-                    
-                    <?php if ($this->session->userdata('user_level') <= 2): ?>
-                        <a href="<?php echo base_url('production'); ?>" class="block px-4 py-2 rounded hover:bg-gray-200 dark:hover:bg-gray-700">🏭 Produksi</a>
-                    <?php endif; ?>
-                    
-                    <?php if ($this->session->userdata('user_level') <= 3): ?>
-                        <a href="<?php echo base_url('cutting'); ?>" class="block px-4 py-2 rounded hover:bg-gray-200 dark:hover:bg-gray-700">✂️ Pemotongan</a>
-                    <?php endif; ?>
-                    
-                    <?php if ($this->session->userdata('user_level') <= 2): ?>
-                        <a href="<?php echo base_url('delivery'); ?>" class="block px-4 py-2 rounded hover:bg-gray-200 dark:hover:bg-gray-700">🚚 Surat Jalan</a>
-                    <?php endif; ?>
-                    
-                    <?php if ($this->session->userdata('user_level') <= 2): ?>
-                        <a href="<?php echo base_url('report'); ?>" class="block px-4 py-2 rounded hover:bg-gray-200 dark:hover:bg-gray-700">📈 Laporan</a>
-                    <?php endif; ?>
-                    
-                    <?php if ($this->session->userdata('user_level') == 1): ?>
-                        <hr class="my-4 border-gray-300 dark:border-gray-600">
-                        <a href="<?php echo base_url('user'); ?>" class="block px-4 py-2 rounded hover:bg-gray-200 dark:hover:bg-gray-700">👨‍💼 User Management</a>
-                    <?php endif; ?>
-                </nav>
+    <!-- Flash Messages -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
+        <?php if($this->session->flashdata('success')): ?>
+            <div class="bg-green-100 dark:bg-green-900 border border-green-400 dark:border-green-700 text-green-700 dark:text-green-200 px-4 py-3 rounded relative">
+                <i class="fas fa-check-circle"></i> <?php echo $this->session->flashdata('success'); ?>
             </div>
-        </div>
         <?php endif; ?>
+        <?php if($this->session->flashdata('error')): ?>
+            <div class="bg-red-100 dark:bg-red-900 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-200 px-4 py-3 rounded relative">
+                <i class="fas fa-exclamation-circle"></i> <?php echo $this->session->flashdata('error'); ?>
+            </div>
+        <?php endif; ?>
+    </div>
 
-        <!-- Main Content -->
-        <div class="flex-1 p-6">
-            <!-- Flash Messages -->
-            <?php if ($this->session->flashdata('success')): ?>
-                <div class="mb-4 p-4 bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-200 rounded border border-green-400 dark:border-green-600">
-                    ✅ <?php echo $this->session->flashdata('success'); ?>
-                </div>
-            <?php endif; ?>
-            
-            <?php if ($this->session->flashdata('error')): ?>
-                <div class="mb-4 p-4 bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-200 rounded border border-red-400 dark:border-red-600">
-                    ❌ <?php echo $this->session->flashdata('error'); ?>
-                </div>
-            <?php endif; ?>
-            
-            <?php if (isset($error)): ?>
-                <div class="mb-4 p-4 bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-200 rounded border border-yellow-400 dark:border-yellow-600">
-                    ⚠️ <?php echo $error; ?>
-                </div>
-            <?php endif; ?>
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

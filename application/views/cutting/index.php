@@ -1,125 +1,52 @@
-<div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-    <div class="flex items-center justify-between mb-6">
-        <h3 class="text-xl font-bold text-gray-900 dark:text-white">Data Produksi Cutting</h3>
-        <button onclick="showCuttingModal()" class="btn btn-primary">
-            <i class="fas fa-plus mr-2"></i> Tambah Cutting
-        </button>
+<div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+    <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold text-gray-900 dark:text-white">
+            <i class="fas fa-cut text-red-500"></i> Manajemen Pemotongan Barang
+        </h2>
+        <a href="<?php echo base_url('cutting/add'); ?>" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium">
+            <i class="fas fa-plus"></i> Tambah Pemotongan
+        </a>
     </div>
 
-    <table id="cuttingTable" class="w-full">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Nama Barang</th>
-                <th>Kategori</th>
-                <th>Qty Cutting</th>
-                <th>Sampah</th>
-                <th>Tanggal</th>
-                <th>Aksi</th>
-            </tr>
-        </thead>
-        <tbody></tbody>
-    </table>
-</div>
-
-<!-- Modal Cutting -->
-<div id="cuttingModal" class="hidden modal-overlay">
-    <div class="modal-content">
-        <h3 class="text-lg font-bold mb-4">Tambah Produksi Cutting</h3>
-        <form id="cuttingForm" class="space-y-4">
-            <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Barang</label>
-                <select name="item_id" id="cuttingItem" required class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    <option value="">Pilih Barang</option>
-                </select>
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Jumlah Cutting</label>
-                <input type="number" name="quantity_produced" required min="1" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Jumlah Sampah</label>
-                <input type="number" name="waste_quantity" value="0" min="0" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
-            </div>
-            <div class="flex gap-2 justify-end">
-                <button type="button" onclick="closeCuttingModal()" class="btn btn-secondary">Batal</button>
-                <button type="submit" class="btn btn-primary">Simpan</button>
-            </div>
-        </form>
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+            <thead class="bg-gray-100 dark:bg-gray-700">
+                <tr>
+                    <th class="px-4 py-2 text-left font-semibold">No</th>
+                    <th class="px-4 py-2 text-left font-semibold">Barang</th>
+                    <th class="px-4 py-2 text-right font-semibold">Cutting</th>
+                    <th class="px-4 py-2 text-right font-semibold">Waste</th>
+                    <th class="px-4 py-2 text-left font-semibold">Petugas</th>
+                    <th class="px-4 py-2 text-left font-semibold">Tanggal</th>
+                    <th class="px-4 py-2 text-center font-semibold">Aksi</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php if(!empty($cuttings)): ?>
+                    <?php $no = 1; foreach($cuttings as $cut): ?>
+                        <tr class="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700">
+                            <td class="px-4 py-3"><?php echo $no++; ?></td>
+                            <td class="px-4 py-3 font-medium"><?php echo $cut->nama_barang; ?></td>
+                            <td class="px-4 py-3 text-right"><?php echo $cut->jumlah_cutting; ?></td>
+                            <td class="px-4 py-3 text-right text-red-600 dark:text-red-400 font-semibold"><?php echo $cut->jumlah_waste; ?></td>
+                            <td class="px-4 py-3"><?php echo $cut->nama_lengkap ?? 'System'; ?></td>
+                            <td class="px-4 py-3"><?php echo date('d M Y H:i', strtotime($cut->created_at)); ?></td>
+                            <td class="px-4 py-3 text-center space-x-2">
+                                <a href="<?php echo base_url('cutting/edit/' . $cut->id); ?>" class="inline-block bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded text-xs">
+                                    <i class="fas fa-edit"></i> Edit
+                                </a>
+                                <a href="<?php echo base_url('cutting/delete/' . $cut->id); ?>" onclick="return confirm('Yakin ingin hapus?');" class="inline-block bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-xs">
+                                    <i class="fas fa-trash"></i> Hapus
+                                </a>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <tr>
+                        <td colspan="7" class="px-4 py-3 text-center text-gray-500 dark:text-gray-400">Belum ada data pemotongan</td>
+                    </tr>
+                <?php endif; ?>
+            </tbody>
+        </table>
     </div>
 </div>
-
-<script>
-    let cuttingTable;
-    
-    $(document).ready(function() {
-        cuttingTable = $('#cuttingTable').DataTable({
-            processing: true,
-            serverSide: true,
-            ajax: {
-                url: '<?= base_url('cutting/get_datatable') ?>',
-                type: 'POST'
-            },
-            columnDefs: [
-                { targets: -1, orderable: false }
-            ]
-        });
-    });
-
-    function showCuttingModal() {
-        document.getElementById('cuttingForm').reset();
-        document.getElementById('cuttingModal').classList.remove('hidden');
-    }
-
-    function closeCuttingModal() {
-        document.getElementById('cuttingModal').classList.add('hidden');
-    }
-
-    function deleteCutting(id) {
-        Swal.fire({
-            title: 'Konfirmasi Hapus',
-            text: 'Apakah Anda yakin ingin menghapus cutting ini?',
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonText: 'Hapus',
-            cancelButtonText: 'Batal',
-            confirmButtonColor: '#ef4444'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                $.ajax({
-                    url: '<?= base_url('cutting/delete') ?>',
-                    type: 'POST',
-                    data: { id: id },
-                    dataType: 'json',
-                    success: function(response) {
-                        if (response.success) {
-                            showSuccess(response.message);
-                            cuttingTable.ajax.reload();
-                        } else {
-                            showError(response.message);
-                        }
-                    }
-                });
-            }
-        });
-    }
-
-    document.getElementById('cuttingForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        $.ajax({
-            url: '<?= base_url('cutting/create') ?>',
-            type: 'POST',
-            data: $(this).serialize(),
-            dataType: 'json',
-            success: function(response) {
-                if (response.success) {
-                    showSuccess(response.message);
-                    closeCuttingModal();
-                    cuttingTable.ajax.reload();
-                } else {
-                    showError(response.message);
-                }
-            }
-        });
-    });
-</script>
