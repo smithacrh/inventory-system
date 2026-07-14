@@ -1,60 +1,31 @@
-            </div>
         </div>
     </div>
 
-    <script>
-        // Sidebar Toggle
-        document.getElementById('sidebarToggle').addEventListener('click', function() {
-            const sidebar = document.getElementById('sidebar');
-            sidebar.classList.toggle('-translate-x-full');
-        });
+    <!-- Footer -->
+    <footer class="bg-gray-200 dark:bg-gray-800 border-t border-gray-300 dark:border-gray-700 py-4 text-center text-gray-600 dark:text-gray-400">
+        <p>&copy; 2026 Inventory Management System. All rights reserved.</p>
+    </footer>
 
-        // Close sidebar when clicking outside
-        document.addEventListener('click', function(event) {
-            const sidebar = document.getElementById('sidebar');
-            const toggle = document.getElementById('sidebarToggle');
-            if (!sidebar.contains(event.target) && !toggle.contains(event.target)) {
-                sidebar.classList.add('-translate-x-full');
+    <script src="<?php echo base_url('assets/js/script.js'); ?>"></script>
+    <script>
+        function toggleTheme() {
+            const html = document.documentElement;
+            if (html.classList.contains('dark')) {
+                html.classList.remove('dark');
+                localStorage.setItem('theme', 'light');
+            } else {
+                html.classList.add('dark');
+                localStorage.setItem('theme', 'dark');
+            }
+        }
+
+        // Load theme on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            const theme = localStorage.getItem('theme') || 'light';
+            if (theme === 'dark') {
+                document.documentElement.classList.add('dark');
             }
         });
-
-        // Logout function
-        function logout() {
-            Swal.fire({
-                title: 'Konfirmasi Logout',
-                text: 'Apakah Anda yakin ingin logout?',
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonText: 'Ya, Logout',
-                cancelButtonText: 'Batal',
-                confirmButtonColor: '#ef4444',
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    window.location.href = '<?= base_url('auth/logout') ?>';
-                }
-            });
-        }
-
-        // Success/Error Toast
-        function showSuccess(message) {
-            Swal.fire({
-                title: 'Berhasil!',
-                text: message,
-                icon: 'success',
-                timer: 2000,
-                timerProgressBar: true
-            });
-        }
-
-        function showError(message) {
-            Swal.fire({
-                title: 'Gagal!',
-                text: message,
-                icon: 'error',
-                timer: 3000,
-                timerProgressBar: true
-            });
-        }
     </script>
 </body>
 </html>
