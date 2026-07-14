@@ -6,24 +6,22 @@ class Report extends CI_Controller {
     public function __construct()
     {
         parent::__construct();
-        $this->load->model('Report_model');
-        $this->load->model('Production_model');
-        $this->load->model('Cutting_model');
-        $this->load->model('Delivery_model');
         $this->load->helper('url');
-        $this->check_login();
+        $this->load->library('session');
+        $this->load->model(['Report_model', 'Item_model', 'Production_model', 'Cutting_model', 'Delivery_model']);
+        $this->_check_login();
     }
 
-    private function check_login()
+    private function _check_login()
     {
-        if (!$this->session->userdata('user_id')) {
+        if (!$this->session->userdata('is_logged_in')) {
             redirect('auth/login');
         }
     }
 
     public function index()
     {
-        $data['title'] = 'Laporan';
+        $data['page_title'] = 'Rekap Laporan';
         $this->load->view('layouts/header', $data);
         $this->load->view('report/index', $data);
         $this->load->view('layouts/footer');
@@ -31,9 +29,10 @@ class Report extends CI_Controller {
 
     public function stock()
     {
-        $data['title'] = 'Laporan Stok Barang';
-        $data['report_data'] = $this->Report_model->get_stock_report();
-        
+        $data['page_title'] = 'Laporan Stok Barang';
+        $data['items'] = $this->Item_model->get_all_with_value();
+        $data['total_value'] = $this->Item_model->get_total_stock_value();
+
         $this->load->view('layouts/header', $data);
         $this->load->view('report/stock', $data);
         $this->load->view('layouts/footer');
@@ -41,14 +40,14 @@ class Report extends CI_Controller {
 
     public function production()
     {
-        $data['title'] = 'Laporan Produksi';
-        $start_date = $this->input->get('start_date') ? $this->input->get('start_date') : date('Y-m-01');
-        $end_date = $this->input->get('end_date') ? $this->input->get('end_date') : date('Y-m-d');
-        
-        $data['report_data'] = $this->Production_model->get_report($start_date, $end_date);
-        $data['start_date'] = $start_date;
-        $data['end_date'] = $end_date;
-        
+        $start_date = $this->input->get('start_date', true);
+        $end_date = $this->input->get('end_date', true);
+
+        $data['page_title'] = 'Laporan Produksi';
+        $data['start_date'] = $start_date ? $start_date : date('Y-m-01');
+        $data['end_date'] = $end_date ? $end_date : date('Y-m-d');
+        $data['productions'] = $this->Production_model->get_by_date_range($data['start_date'], $data['end_date']);
+
         $this->load->view('layouts/header', $data);
         $this->load->view('report/production', $data);
         $this->load->view('layouts/footer');
@@ -56,14 +55,14 @@ class Report extends CI_Controller {
 
     public function cutting()
     {
-        $data['title'] = 'Laporan Pemotongan';
-        $start_date = $this->input->get('start_date') ? $this->input->get('start_date') : date('Y-m-01');
-        $end_date = $this->input->get('end_date') ? $this->input->get('end_date') : date('Y-m-d');
-        
-        $data['report_data'] = $this->Cutting_model->get_report($start_date, $end_date);
-        $data['start_date'] = $start_date;
-        $data['end_date'] = $end_date;
-        
+        $start_date = $this->input->get('start_date', true);
+        $end_date = $this->input->get('end_date', true);
+
+        $data['page_title'] = 'Laporan Pemotongan';
+        $data['start_date'] = $start_date ? $start_date : date('Y-m-01');
+        $data['end_date'] = $end_date ? $end_date : date('Y-m-d');
+        $data['cuttings'] = $this->Cutting_model->get_by_date_range($data['start_date'], $data['end_date']);
+
         $this->load->view('layouts/header', $data);
         $this->load->view('report/cutting', $data);
         $this->load->view('layouts/footer');
@@ -71,14 +70,14 @@ class Report extends CI_Controller {
 
     public function delivery()
     {
-        $data['title'] = 'Laporan Pengiriman';
-        $start_date = $this->input->get('start_date') ? $this->input->get('start_date') : date('Y-m-01');
-        $end_date = $this->input->get('end_date') ? $this->input->get('end_date') : date('Y-m-d');
-        
-        $data['report_data'] = $this->Delivery_model->get_report($start_date, $end_date);
-        $data['start_date'] = $start_date;
-        $data['end_date'] = $end_date;
-        
+        $start_date = $this->input->get('start_date', true);
+        $end_date = $this->input->get('end_date', true);
+
+        $data['page_title'] = 'Laporan Pengiriman';
+        $data['start_date'] = $start_date ? $start_date : date('Y-m-01');
+        $data['end_date'] = $end_date ? $end_date : date('Y-m-d');
+        $data['deliveries'] = $this->Delivery_model->get_by_date_range($data['start_date'], $data['end_date']);
+
         $this->load->view('layouts/header', $data);
         $this->load->view('report/delivery', $data);
         $this->load->view('layouts/footer');
@@ -86,13 +85,17 @@ class Report extends CI_Controller {
 
     public function waste()
     {
-        $data['title'] = 'Laporan Limbah/Waste';
-        $data['report_data'] = $this->Report_model->get_waste_report();
-        
+        $start_date = $this->input->get('start_date', true);
+        $end_date = $this->input->get('end_date', true);
+
+        $data['page_title'] = 'Laporan Limbah/Waste';
+        $data['start_date'] = $start_date ? $start_date : date('Y-m-01');
+        $data['end_date'] = $end_date ? $end_date : date('Y-m-d');
+        $data['waste_report'] = $this->Report_model->get_waste_report($data['start_date'], $data['end_date']);
+
         $this->load->view('layouts/header', $data);
         $this->load->view('report/waste', $data);
         $this->load->view('layouts/footer');
     }
-
 }
 ?>

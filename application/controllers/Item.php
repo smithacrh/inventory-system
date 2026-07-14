@@ -6,122 +6,104 @@ class Item extends CI_Controller {
     public function __construct()
     {
         parent::__construct();
-        $this->load->model('Item_model');
-        $this->load->model('Category_model');
-        $this->load->library('form_validation');
         $this->load->helper('url');
-        $this->check_login();
+        $this->load->library('session');
+        $this->load->model(['Item_model', 'Category_model']);
+        $this->_check_login();
     }
 
-    private function check_login()
+    private function _check_login()
     {
-        if (!$this->session->userdata('user_id')) {
+        if (!$this->session->userdata('is_logged_in')) {
             redirect('auth/login');
         }
     }
 
     public function index()
     {
-        $data['title'] = 'Manajemen Stok Barang';
-        $data['items'] = $this->Item_model->get_all();
-        
+        $data['page_title'] = 'Manajemen Stok Barang';
+        $data['items'] = $this->Item_model->get_all_with_category();
+
         $this->load->view('layouts/header', $data);
-        $this->load->view('item/list', $data);
+        $this->load->view('item/index', $data);
         $this->load->view('layouts/footer');
     }
 
     public function add()
     {
-        $data['title'] = 'Tambah Barang';
-        $data['categories'] = $this->Category_model->get_all();
-        
-        if ($this->input->post()) {
-            $this->form_validation->set_rules('item_name', 'Nama Barang', 'required');
-            $this->form_validation->set_rules('category_id', 'Kategori', 'required');
-            $this->form_validation->set_rules('stock', 'Stok', 'required|numeric');
-            $this->form_validation->set_rules('unit', 'Satuan', 'required');
-            $this->form_validation->set_rules('price', 'Harga', 'required|numeric');
+        if ($this->input->method() === 'post') {
+            $data = [
+                'kategori_id' => $this->input->post('kategori_id', true),
+                'nama_barang' => $this->input->post('nama_barang', true),
+                'sku' => $this->input->post('sku', true),
+                'harga_satuan' => $this->input->post('harga_satuan', true),
+                'stok' => $this->input->post('stok', true),
+                'minimum_stok' => $this->input->post('minimum_stok', true),
+                'satuan' => $this->input->post('satuan', true),
+                'created_at' => date('Y-m-d H:i:s')
+            ];
 
-            if ($this->form_validation->run() == FALSE) {
-                $this->load->view('layouts/header', $data);
-                $this->load->view('item/form', $data);
-                $this->load->view('layouts/footer');
-            } else {
-                $insert_data = array(
-                    'item_name' => $this->input->post('item_name'),
-                    'category_id' => $this->input->post('category_id'),
-                    'stock' => $this->input->post('stock'),
-                    'unit' => $this->input->post('unit'),
-                    'price' => $this->input->post('price'),
-                    'created_at' => date('Y-m-d H:i:s')
-                );
-
-                if ($this->Item_model->insert($insert_data)) {
-                    $this->session->set_flashdata('success', 'Barang berhasil ditambahkan');
-                    redirect('item');
-                }
+            if ($this->Item_model->insert($data)) {
+                $this->session->set_flashdata('success', 'Barang berhasil ditambahkan!');
+                redirect('item');
             }
-        } else {
-            $this->load->view('layouts/header', $data);
-            $this->load->view('item/form', $data);
-            $this->load->view('layouts/footer');
         }
+
+        $data['page_title'] = 'Tambah Barang';
+        $data['categories'] = $this->Category_model->get_all();
+        $this->load->view('layouts/header', $data);
+        $this->load->view('item/form', $data);
+        $this->load->view('layouts/footer');
     }
 
     public function edit($id)
     {
-        $data['title'] = 'Edit Barang';
-        $data['item'] = $this->Item_model->get_by_id($id);
-        $data['categories'] = $this->Category_model->get_all();
-        
-        if ($this->input->post()) {
-            $this->form_validation->set_rules('item_name', 'Nama Barang', 'required');
-            $this->form_validation->set_rules('category_id', 'Kategori', 'required');
-            $this->form_validation->set_rules('stock', 'Stok', 'required|numeric');
-            $this->form_validation->set_rules('unit', 'Satuan', 'required');
-            $this->form_validation->set_rules('price', 'Harga', 'required|numeric');
-
-            if ($this->form_validation->run() == FALSE) {
-                $this->load->view('layouts/header', $data);
-                $this->load->view('item/form', $data);
-                $this->load->view('layouts/footer');
-            } else {
-                $update_data = array(
-                    'item_name' => $this->input->post('item_name'),
-                    'category_id' => $this->input->post('category_id'),
-                    'stock' => $this->input->post('stock'),
-                    'unit' => $this->input->post('unit'),
-                    'price' => $this->input->post('price'),
-                    'updated_at' => date('Y-m-d H:i:s')
-                );
-
-                if ($this->Item_model->update($id, $update_data)) {
-                    $this->session->set_flashdata('success', 'Barang berhasil diupdate');
-                    redirect('item');
-                }
-            }
-        } else {
-            $this->load->view('layouts/header', $data);
-            $this->load->view('item/form', $data);
-            $this->load->view('layouts/footer');
+        $item = $this->Item_model->get_by_id($id);
+        if (!$item) {
+            show_404();
         }
+
+        if ($this->input->method() === 'post') {
+            $data = [
+                'kategori_id' => $this->input->post('kategori_id', true),
+                'nama_barang' => $this->input->post('nama_barang', true),
+                'sku' => $this->input->post('sku', true),
+                'harga_satuan' => $this->input->post('harga_satuan', true),
+                'stok' => $this->input->post('stok', true),
+                'minimum_stok' => $this->input->post('minimum_stok', true),
+                'satuan' => $this->input->post('satuan', true),
+                'updated_at' => date('Y-m-d H:i:s')
+            ];
+
+            if ($this->Item_model->update($id, $data)) {
+                $this->session->set_flashdata('success', 'Barang berhasil diperbarui!');
+                redirect('item');
+            }
+        }
+
+        $data['page_title'] = 'Edit Barang';
+        $data['item'] = $item;
+        $data['categories'] = $this->Category_model->get_all();
+        $this->load->view('layouts/header', $data);
+        $this->load->view('item/form', $data);
+        $this->load->view('layouts/footer');
     }
 
     public function delete($id)
     {
         if ($this->Item_model->delete($id)) {
-            $this->session->set_flashdata('success', 'Barang berhasil dihapus');
+            $this->session->set_flashdata('success', 'Barang berhasil dihapus!');
         } else {
-            $this->session->set_flashdata('error', 'Gagal menghapus barang');
+            $this->session->set_flashdata('error', 'Gagal menghapus barang!');
         }
         redirect('item');
     }
 
     public function get_stock($id)
     {
+        $this->output->set_content_type('application/json');
         $item = $this->Item_model->get_by_id($id);
-        echo json_encode(array('stock' => $item->stock, 'price' => $item->price));
+        echo json_encode($item);
     }
-
 }
 ?>
